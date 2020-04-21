@@ -5,6 +5,7 @@ all:
 
 dependencies:
 	@/bin/echo -n "[Lycurgus] Installing dependencies..."
+	@go get -u gopkg.in/elazarl/goproxy 
 	@/bin/echo "OK"
 
 clean:

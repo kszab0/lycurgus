@@ -18,8 +18,7 @@ set out=lycurgus.exe
 
 :dependencies
 @echo [Lycurgus] Installing dependencies...
-@setx GOARCH "amd64" >nul
-@setx GOOS "windows" >nul
+@go get -u gopkg.in/elazarl/goproxy 
 @echo OK
 @exit /b
 
