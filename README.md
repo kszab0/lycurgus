@@ -1,4 +1,6 @@
 # Lycurgus
+<img src="logo.png" alt="logo" width="200"/>
+
 Lycurgus is a simple ad blocker that works on all major operating systems.
 It works as a proxy therefore won't be blocked or detected by any browser or web page.
 
