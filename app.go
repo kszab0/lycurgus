@@ -10,6 +10,11 @@ import (
 )
 
 const (
+	appTitle   = "Lycurgus"
+	appTooltip = "Lycurgus Ad Blocker"
+)
+
+const (
 	defaultBlockerAddress = ":8080"
 	defaultBlockerEnabled = true
 	defaultBlocklistPath  = "./blocklist"
@@ -38,6 +43,7 @@ type App struct {
 
 	blocker *Blocker
 	getter  Getter
+	gui     *GUI
 }
 
 // AppOption is a functional option for configuring App.
@@ -103,6 +109,12 @@ func NewApp(opts ...AppOption) (*App, error) {
 	if err := app.LoadWhitelist(); err != nil {
 		return nil, err
 	}
+
+	gui, err := NewGUI(WithGUIEnabled(app.blockerEnabled))
+	if err != nil {
+		return nil, err
+	}
+	app.gui = gui
 
 	return app, nil
 }
@@ -199,4 +211,19 @@ func loadMatcherFromFile(path string) (Matcher, error) {
 // RunBlocker serves the Blocker.
 func (app *App) RunBlocker() error {
 	return http.ListenAndServe(app.blockerAddress, app.blocker)
+}
+
+// RunGUI starts the GUI.
+func (app *App) RunGUI() {
+	go func() {
+		for {
+			select {
+			case enabled := <-app.gui.EnabledCh:
+				app.blocker.enabled = enabled
+			case <-app.gui.QuitCh:
+				return
+			}
+		}
+	}()
+	app.gui.Run()
 }

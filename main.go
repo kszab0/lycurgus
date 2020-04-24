@@ -9,5 +9,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Fatal(app.RunBlocker())
+	go func() {
+		log.Fatal(app.RunBlocker())
+	}()
+	app.RunGUI()
 }
