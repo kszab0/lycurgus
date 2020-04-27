@@ -20,7 +20,6 @@ type regexpMatcher struct {
 // Load loads regular expression rules
 func (m *regexpMatcher) Load(rules []string) {
 	regexes := strings.Join(rules, "|")
-	regexes += "$"
 	m.regexp = regexp.MustCompile(regexes)
 }
 

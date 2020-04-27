@@ -7,6 +7,7 @@ func TestRegexpMatcher(t *testing.T) {
 		"reddit.com",
 		"^stackoverflow.*$",
 		"news.ycombinator.*",
+		"twitter.com",
 	}
 
 	tt := []struct {
@@ -14,7 +15,9 @@ func TestRegexpMatcher(t *testing.T) {
 		expected bool
 	}{
 		{"reddit.com", true},
+		{"www.reddit.com", true},
 		{"reddit.com:443", true},
+		{"www.reddit.com:443", true},
 		{"ads.reddit.com", true},
 		{"reddit.eu", false},
 		{"stackoverflow.com", true},
@@ -24,6 +27,10 @@ func TestRegexpMatcher(t *testing.T) {
 		{"news.ycombinator.eu", true},
 		{"ycombinator.com", false},
 		{"google.com", false},
+		{"twitter.com", true},
+		{"www.twitter.com", true},
+		{"twitter.com:443", true},
+		{"www.twitter.com:443", true},
 	}
 
 	matcher := regexpMatcher{}
