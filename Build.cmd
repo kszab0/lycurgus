@@ -3,6 +3,7 @@ set out=lycurgus.exe
 
 @if -%1-==-- goto all
 @if [%1]==[all] goto all
+@if [%1]==[dev] goto dev
 @if [%1]==[dependencies] goto dependencies
 @if [%1]==[clean] goto clean
 @echo Build target not found
