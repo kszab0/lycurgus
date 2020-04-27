@@ -18,8 +18,12 @@ github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99 h1:td9MdKY58JVt
 github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99/go.mod h1:8nIltTq/bk09GHSn6w3r9IW2rRP8qi0Acde2uTC2UrY=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
+github.com/go-ole/go-ole v1.2.4 h1:nNBDSCOigTSiarFpYE9J/KtEA1IOW4CNeqT9TQDqCxI=
+github.com/go-ole/go-ole v1.2.4/go.mod h1:XCwSNxSkXRo4vlyPy93sltvi/qJq0jqQhjqQNIwKuxM=
 github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
+github.com/kszab0/go-autostart v0.0.0-20200427071555-bff0c655f7a4 h1:8YZqERs2WoI7ydCeWYvvioE3wOwsOaCZMt3rWnLaY+Q=
+github.com/kszab0/go-autostart v0.0.0-20200427071555-bff0c655f7a4/go.mod h1:LGV5zaxXaZclKXg3AiznfGVFuLC6HoI4SvGcBYsLTrc=
 github.com/lxn/walk v0.0.0-20191113135339-bf589de20b3c h1:4pJw1uBKndwiBBJpcbqP1Bf90YfqTJUsHG9DVoAfIQ8=
 github.com/lxn/walk v0.0.0-20191113135339-bf589de20b3c/go.mod h1:E23UucZGqpuUANJooIbHWCufXvOcT6E7Stq81gU+CSQ=
 github.com/lxn/win v0.0.0-20191106123917-121afc750dd3 h1:DvGEvKK/Qnhph/EgdBN9zXA7pEosgJ0k57ojII51JAo=

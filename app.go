@@ -10,17 +10,21 @@ import (
 )
 
 const (
+	appName    = "lycurgus"
 	appTitle   = "Lycurgus"
 	appTooltip = "Lycurgus Ad Blocker"
 )
 
 const (
-	defaultBlockerAddress = ":8080"
-	defaultBlockerEnabled = true
-	defaultBlocklistPath  = "./blocklist"
-	defaultBlacklistPath  = "./blacklist"
-	defaultWhitelistPath  = "./whitelist"
-	defaultBlocklists     = `https://adaway.org/hosts.txt
+	defaultBlockerAddress   = ":8080"
+	defaultBlockerEnabled   = true
+	defaultBlocklistPath    = "./blocklist"
+	defaultBlacklistPath    = "./blacklist"
+	defaultWhitelistPath    = "./whitelist"
+	defaultAutostartEnabled = true
+)
+
+const defaultBlocklists = `https://adaway.org/hosts.txt
 https://v.firebog.net/hosts/AdguardDNS.txt
 https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt
 https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
@@ -30,20 +34,21 @@ https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimet
 https://raw.githubusercontent.com/FadeMind/hosts.extras/master/UncheckyAds/hosts
 https://raw.githubusercontent.com/bigdargon/hostsVN/master/hosts
 https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts`
-)
 
 // App holds all the states for the application
 // and manages all the components.
 type App struct {
-	blockerAddress string
-	blockerEnabled bool
-	blocklistPath  string
-	blacklistPath  string
-	whitelistPath  string
+	blockerAddress   string
+	blockerEnabled   bool
+	blocklistPath    string
+	blacklistPath    string
+	whitelistPath    string
+	autostartEnabled bool
 
-	blocker *Blocker
-	getter  Getter
-	gui     *GUI
+	blocker   *Blocker
+	getter    Getter
+	gui       *GUI
+	autostart *Autostart
 }
 
 // AppOption is a functional option for configuring App.
@@ -84,15 +89,23 @@ func WithWhitelistPath(path string) AppOption {
 	}
 }
 
+// WithAutostartEnabled sets the file path for the blacklist.
+func WithAutostartEnabled(enabled bool) AppOption {
+	return func(app *App) {
+		app.autostartEnabled = enabled
+	}
+}
+
 // NewApp creates and initializes an App.
 func NewApp(opts ...AppOption) (*App, error) {
 	app := &App{
-		blockerAddress: defaultBlockerAddress,
-		blockerEnabled: defaultBlockerEnabled,
-		blocklistPath:  defaultBlocklistPath,
-		blacklistPath:  defaultBlacklistPath,
-		whitelistPath:  defaultWhitelistPath,
-		getter:         http.DefaultClient,
+		blockerAddress:   defaultBlockerAddress,
+		blockerEnabled:   defaultBlockerEnabled,
+		blocklistPath:    defaultBlocklistPath,
+		blacklistPath:    defaultBlacklistPath,
+		whitelistPath:    defaultWhitelistPath,
+		autostartEnabled: defaultAutostartEnabled,
+		getter:           http.DefaultClient,
 	}
 	for _, opt := range opts {
 		opt(app)
@@ -115,6 +128,15 @@ func NewApp(opts ...AppOption) (*App, error) {
 		return nil, err
 	}
 	app.gui = gui
+
+	autostart, err := NewAutostart()
+	if err != nil {
+		log.Println("Error setting autostart: ", err)
+	}
+	app.autostart = autostart
+	if err := app.autostart.setEnabled(app.autostartEnabled); err != nil {
+		log.Println("Error setting autostart: ", err)
+	}
 
 	return app, nil
 }
@@ -220,6 +242,10 @@ func (app *App) RunGUI() {
 			select {
 			case enabled := <-app.gui.EnabledCh:
 				app.blocker.enabled = enabled
+			case enabled := <-app.gui.AutostartCh:
+				if err := app.autostart.setEnabled(enabled); err != nil {
+					log.Println("Error setting autostart: ", err)
+				}
 			case <-app.gui.QuitCh:
 				return
 			}
