@@ -16,13 +16,21 @@ type GUI struct {
 
 	EnabledCh   chan bool
 	AutostartCh chan bool
-	QuitCh      chan struct{}
+
+	ReloadBlocklistCh chan struct{}
+	ReloadBlacklistCh chan struct{}
+	ReloadWhitelistCh chan struct{}
+
+	QuitCh chan struct{}
 }
 
 type menu struct {
-	enabled   *systray.MenuItem
-	autostart *systray.MenuItem
-	quit      *systray.MenuItem
+	enabled         *systray.MenuItem
+	autostart       *systray.MenuItem
+	reloadBlocklist *systray.MenuItem
+	reloadBlacklist *systray.MenuItem
+	reloadWhitelist *systray.MenuItem
+	quit            *systray.MenuItem
 }
 
 // GUIOption is a functional option for configuring the GUI
@@ -53,9 +61,12 @@ func NewGUI(opts ...GUIOption) (*GUI, error) {
 		icon:    icon,
 		menu:    &menu{},
 
-		EnabledCh:   make(chan bool),
-		AutostartCh: make(chan bool),
-		QuitCh:      make(chan struct{}),
+		EnabledCh:         make(chan bool),
+		AutostartCh:       make(chan bool),
+		ReloadBlocklistCh: make(chan struct{}),
+		ReloadBlacklistCh: make(chan struct{}),
+		ReloadWhitelistCh: make(chan struct{}),
+		QuitCh:            make(chan struct{}),
 	}
 
 	for _, opt := range opts {
@@ -89,6 +100,12 @@ func (gui *GUI) init() {
 		gui.menu.autostart.Check()
 	}
 	systray.AddSeparator()
+
+	gui.menu.reloadBlocklist = systray.AddMenuItem("Reload Blocklist", "")
+	gui.menu.reloadBlacklist = systray.AddMenuItem("Reload Blacklist", "")
+	gui.menu.reloadWhitelist = systray.AddMenuItem("Reload Whitelist", "")
+	systray.AddSeparator()
+
 	gui.menu.quit = systray.AddMenuItem("Quit", "")
 }
 
@@ -111,6 +128,12 @@ func (gui *GUI) listen() {
 			} else {
 				gui.menu.autostart.Uncheck()
 			}
+		case <-gui.menu.reloadBlocklist.ClickedCh:
+			gui.ReloadBlocklistCh <- struct{}{}
+		case <-gui.menu.reloadBlacklist.ClickedCh:
+			gui.ReloadBlacklistCh <- struct{}{}
+		case <-gui.menu.reloadWhitelist.ClickedCh:
+			gui.ReloadWhitelistCh <- struct{}{}
 		case <-gui.menu.quit.ClickedCh:
 			gui.QuitCh <- struct{}{}
 			gui.Quit()
