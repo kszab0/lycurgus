@@ -221,11 +221,15 @@ func (app *App) LoadWhitelist() error {
 
 // loadMatcherFromFile loads and initializes a regexpMatcher from a file.
 func loadMatcherFromFile(path string) (Matcher, error) {
-	matcher := &regexpMatcher{}
 	hosts, err := parseHostsFile(path)
 	if err != nil {
 		return nil, err
 	}
+	// deal with existing but empty file
+	if len(hosts) <= 0 {
+		return nil, nil
+	}
+	matcher := &regexpMatcher{}
 	matcher.Load(hosts)
 	return matcher, nil
 }

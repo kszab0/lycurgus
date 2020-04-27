@@ -60,11 +60,24 @@ func TestLoadMatcherFromFile(t *testing.T) {
 	if matcher == nil {
 		t.Fatal("Matcher should not be nil")
 	}
+}
 
-	path = filepath.Join("testdata", "nothing")
-	matcher, err = loadMatcherFromFile(path)
+func TestLoadMathcerFromNotExistingFile(t *testing.T) {
+	path := filepath.Join("testdata", "nothing")
+	matcher, err := loadMatcherFromFile(path)
 	if !os.IsNotExist(err) {
 		t.Fatal("Error should be os.ErrNotExists")
+	}
+	if matcher != nil {
+		t.Fatal("Matcher should be nil")
+	}
+}
+
+func TestLoadMatcherFromEmptyFile(t *testing.T) {
+	path := filepath.Join("testdata", "empty")
+	matcher, err := loadMatcherFromFile(path)
+	if err != nil {
+		t.Fatal(err)
 	}
 	if matcher != nil {
 		t.Fatal("Matcher should be nil")
