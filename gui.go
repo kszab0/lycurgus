@@ -113,8 +113,13 @@ func (gui *GUI) listen() {
 			}
 		case <-gui.menu.quit.ClickedCh:
 			gui.QuitCh <- struct{}{}
-			systray.Quit()
+			gui.Quit()
 			return
 		}
 	}
+}
+
+// Quit terminates the GUI
+func (gui *GUI) Quit() {
+	systray.Quit()
 }
