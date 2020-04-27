@@ -123,7 +123,10 @@ func NewApp(opts ...AppOption) (*App, error) {
 		return nil, err
 	}
 
-	gui, err := NewGUI(WithGUIEnabled(app.blockerEnabled))
+	gui, err := NewGUI(
+		WithGUIEnabled(app.blockerEnabled),
+		WithGUIAutostart(app.autostartEnabled),
+	)
 	if err != nil {
 		return nil, err
 	}
