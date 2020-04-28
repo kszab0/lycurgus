@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -18,11 +19,12 @@ const (
 const (
 	defaultBlockerAddress   = ":8080"
 	defaultBlockerEnabled   = true
-	defaultBlocklistPath    = "./blocklist"
-	defaultBlacklistPath    = "./blacklist"
-	defaultWhitelistPath    = "./whitelist"
 	defaultAutostartEnabled = true
 )
+
+var defaultBlocklistPath = filepath.Join(configDir(), "blocklist")
+var defaultBlacklistPath = filepath.Join(configDir(), "blacklist")
+var defaultWhitelistPath = filepath.Join(configDir(), "whitelist")
 
 const defaultBlocklists = `https://adaway.org/hosts.txt
 https://v.firebog.net/hosts/AdguardDNS.txt
