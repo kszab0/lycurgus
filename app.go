@@ -51,6 +51,8 @@ type App struct {
 	getter    Getter
 	gui       *GUI
 	autostart *Autostart
+
+	QuitCh chan struct{}
 }
 
 // AppOption is a functional option for configuring App.
@@ -108,6 +110,7 @@ func NewApp(opts ...AppOption) (*App, error) {
 		whitelistPath:    defaultWhitelistPath,
 		autostartEnabled: defaultAutostartEnabled,
 		getter:           http.DefaultClient,
+		QuitCh:           make(chan struct{}, 1),
 	}
 	for _, opt := range opts {
 		opt(app)
@@ -268,6 +271,7 @@ func (app *App) RunGUI() {
 					log.Println("Error reloading whitelist: ", err)
 				}
 			case <-app.gui.QuitCh:
+				app.QuitCh <- struct{}{}
 				return
 			}
 		}

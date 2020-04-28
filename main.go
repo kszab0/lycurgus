@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -13,6 +15,7 @@ func main() {
 	blacklistPath := flag.String("blacklist", defaultBlacklistPath, "path to blacklist file")
 	whitelistPath := flag.String("whitelist", defaultWhitelistPath, "path to whitelist file")
 	autostartEnabled := flag.Bool("autostart", defaultAutostartEnabled, "autostart enabled")
+	guiEnabled := flag.Bool("gui", true, "start app with GUI")
 	logFile := flag.String("log", "", "path to log file")
 	flag.Parse()
 
@@ -36,8 +39,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	go func() {
 		log.Fatal(app.RunBlocker())
 	}()
-	app.RunGUI()
+
+	if *guiEnabled {
+		go app.RunGUI()
+	}
+
+	var stopCh = make(chan os.Signal, 2)
+	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case <-app.QuitCh:
+		return
+	case <-stopCh:
+		return
+	}
 }
