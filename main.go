@@ -10,13 +10,14 @@ import (
 )
 
 func main() {
-	proxyAddress := flag.String("proxy", defaultBlockerAddress, "proxy address")
+	blockerAddress := flag.String("address", defaultBlockerAddress, "address to run blocker")
 	blocklistPath := flag.String("blocklist", defaultBlocklistPath, "path to blocklist file")
 	blacklistPath := flag.String("blacklist", defaultBlacklistPath, "path to blacklist file")
 	whitelistPath := flag.String("whitelist", defaultWhitelistPath, "path to whitelist file")
 	autostartEnabled := flag.Bool("autostart", defaultAutostartEnabled, "autostart enabled")
 	guiEnabled := flag.Bool("gui", true, "start app with GUI")
 	logFile := flag.String("log", "", "path to log file")
+	proxyAddress := flag.String("proxy", "", "upstream proxy address")
 	flag.Parse()
 
 	if *logFile != "" {
@@ -30,11 +31,12 @@ func main() {
 	}
 
 	app, err := NewApp(
-		WithBlockerAddress(*proxyAddress),
+		WithBlockerAddress(*blockerAddress),
 		WithBlocklistPath(*blocklistPath),
 		WithBlacklistPath(*blacklistPath),
 		WithWhitelistPath(*whitelistPath),
 		WithAutostartEnabled(*autostartEnabled),
+		WithProxyAddress(*proxyAddress),
 	)
 	if err != nil {
 		log.Fatal(err)

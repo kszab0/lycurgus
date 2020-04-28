@@ -9,7 +9,8 @@ import (
 
 // Blocker blocks HTTP requests based on different rules
 type Blocker struct {
-	enabled bool
+	enabled      bool
+	proxyAddress string
 
 	proxy     *goproxy.ProxyHttpServer
 	blocklist Matcher
@@ -17,12 +18,40 @@ type Blocker struct {
 	whitelist Matcher
 }
 
-// NewBlocker creates and initializes a Blocker
-func NewBlocker(enabled bool) *Blocker {
-	b := &Blocker{
-		enabled: enabled,
+// BlockerOption is a functional option for configuring Blocker.
+type BlockerOption func(*Blocker)
+
+// WithBlockerEnabled sets the blocker's enabled state.
+func WithBlockerEnabled(enabled bool) BlockerOption {
+	return func(b *Blocker) {
+		b.enabled = enabled
 	}
-	b.initProxy()
+}
+
+// WithBlockerProxyAddress sets the blocker's upstream proxy address.
+func WithBlockerProxyAddress(url string) BlockerOption {
+	return func(b *Blocker) {
+		b.proxyAddress = url
+	}
+}
+
+// NewBlocker creates and initializes a Blocker
+func NewBlocker(opts ...BlockerOption) *Blocker {
+	b := &Blocker{
+		enabled: defaultBlockerEnabled,
+	}
+
+	for _, opt := range opts {
+		opt(b)
+	}
+
+	b.proxy = goproxy.NewProxyHttpServer()
+	b.proxy.OnRequest().HandleConnectFunc(b.handleConnect)
+	// set upstream proxy address
+	if b.proxyAddress != "" {
+		b.proxy.ConnectDial = b.proxy.NewConnectDialToProxy("http://" + b.proxyAddress)
+	}
+
 	return b
 }
 
@@ -34,11 +63,6 @@ func (b *Blocker) Toggle() {
 // ServeHTTP implements the http.Handler interface
 func (b *Blocker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b.proxy.ServeHTTP(w, r)
-}
-
-func (b *Blocker) initProxy() {
-	b.proxy = goproxy.NewProxyHttpServer()
-	b.proxy.OnRequest().HandleConnectFunc(b.handleConnect)
 }
 
 func (b *Blocker) handleConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {

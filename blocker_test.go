@@ -7,9 +7,9 @@ import (
 )
 
 func TestNewBlocker(t *testing.T) {
-	blocker := NewBlocker(true)
-	if blocker.enabled != true {
-		t.Errorf("enabled should be true")
+	blocker := NewBlocker(WithBlockerEnabled(true))
+	if blocker.enabled != defaultBlockerEnabled {
+		t.Errorf("enabled should be %v", defaultBlockerEnabled)
 	}
 	if blocker.proxy == nil {
 		t.Errorf("proxy should not be nil")
@@ -55,7 +55,7 @@ func (m *whitelistMatcher) Match(host string) bool {
 func TestBlockerEnabled(t *testing.T) {
 	host := "blacklist.com"
 
-	blocker := NewBlocker(true)
+	blocker := NewBlocker(WithBlockerEnabled(true))
 	blocker.blacklist = &blacklistMatcher{}
 
 	if blocker.enabled != true {
@@ -78,7 +78,7 @@ func TestBlockerEnabled(t *testing.T) {
 }
 
 func TestBlockerHandler(t *testing.T) {
-	blocker := NewBlocker(true)
+	blocker := NewBlocker(WithBlockerEnabled(true))
 	blocker.blocklist = &blocklistMatcher{}
 	blocker.blacklist = &blacklistMatcher{}
 	blocker.whitelist = &whitelistMatcher{}

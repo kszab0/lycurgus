@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +47,7 @@ type App struct {
 	blacklistPath    string
 	whitelistPath    string
 	autostartEnabled bool
+	proxyAddress     string
 
 	blocker   *Blocker
 	getter    Getter
@@ -65,8 +67,8 @@ func WithBlockerAddress(addr string) AppOption {
 	}
 }
 
-// WithBlockerEnabled sets the blocker's enabled state.
-func WithBlockerEnabled(enabled bool) AppOption {
+// WithEnabled sets the blocker's enabled state.
+func WithEnabled(enabled bool) AppOption {
 	return func(app *App) {
 		app.blockerEnabled = enabled
 	}
@@ -100,6 +102,13 @@ func WithAutostartEnabled(enabled bool) AppOption {
 	}
 }
 
+// WithProxyAddress sets the upstream proxy address.
+func WithProxyAddress(url string) AppOption {
+	return func(app *App) {
+		app.proxyAddress = url
+	}
+}
+
 // NewApp creates and initializes an App.
 func NewApp(opts ...AppOption) (*App, error) {
 	app := &App{
@@ -116,7 +125,18 @@ func NewApp(opts ...AppOption) (*App, error) {
 		opt(app)
 	}
 
-	blocker := NewBlocker(app.blockerEnabled)
+	// set upstream proxy for default http client
+	if app.proxyAddress != "" {
+		proxyURL, err := url.Parse("http://" + app.proxyAddress)
+		if err == nil {
+			http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+		}
+	}
+
+	blocker := NewBlocker(
+		WithBlockerEnabled(app.blockerEnabled),
+		WithBlockerProxyAddress(app.proxyAddress),
+	)
 	app.blocker = blocker
 	if err := app.LoadBlocklist(); err != nil {
 		return nil, err
