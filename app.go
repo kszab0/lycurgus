@@ -200,18 +200,19 @@ func getBlocklists(path string) (io.ReadCloser, error) {
 // and initializes a hashMatcher as a blocklist.
 func (app *App) loadBlocklist(r io.Reader) Matcher {
 	rules := []string{}
-	lines, err := readLines(r)
+	urls, err := readLines(r)
 	if err != nil {
 		return nil
 	}
-	for _, line := range lines {
-		hosts, err := parseHostsURL(app.getter, line)
+	for _, url := range urls {
+		hosts, err := parseHostsURL(app.getter, url)
 		if err != nil {
-			log.Println("Error reading url: ", line)
+			log.Println("Error reading blocklist: ", url)
 			continue
 		}
 		rules = append(rules, hosts...)
 	}
+	log.Printf("Blocklists loaded (%v)\n", len(urls))
 	matcher := &hashMatcher{}
 	matcher.Load(rules)
 	return matcher
@@ -228,6 +229,8 @@ func (app *App) LoadBlacklist() error {
 		}
 		return err
 	}
+
+	log.Println("Blacklist loaded")
 	app.blocker.blacklist = blacklist
 	return nil
 }
@@ -243,6 +246,8 @@ func (app *App) LoadWhitelist() error {
 		}
 		return err
 	}
+
+	log.Println("Whitelist loaded")
 	app.blocker.whitelist = whitelist
 	return nil
 }
@@ -278,6 +283,7 @@ func (app *App) RunGUI() {
 				if err := app.autostart.setEnabled(enabled); err != nil {
 					log.Println("Error setting autostart: ", err)
 				}
+				log.Println("Autostart set to: ", enabled)
 			case <-app.gui.ReloadBlocklistCh:
 				if err := app.LoadBlocklist(); err != nil {
 					log.Println("Error reloading blocklist: ", err)

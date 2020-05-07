@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"gopkg.in/elazarl/goproxy.v1"
@@ -67,21 +66,21 @@ func (b *Blocker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (b *Blocker) handleConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 	if !b.enabled {
-		log.Printf("Host accepted (proxy disabled): %s\n", host)
+		//log.Printf("Host accepted (proxy disabled): %s\n", host)
 		return goproxy.OkConnect, host
 	}
 	if b.whitelist != nil && b.whitelist.Match(host) {
-		log.Printf("Host accepted (whitelist): %s\n", host)
+		//log.Printf("Host accepted (whitelist): %s\n", host)
 		return goproxy.OkConnect, host
 	}
 	if b.blocklist != nil && b.blocklist.Match(host) {
-		log.Printf("Host rejected (blocklist): %s\n", host)
+		//log.Printf("Host rejected (blocklist): %s\n", host)
 		return goproxy.RejectConnect, host
 	}
 	if b.blacklist != nil && b.blacklist.Match(host) {
-		log.Printf("Host rejected (blacklist): %s\n", host)
+		//log.Printf("Host rejected (blacklist): %s\n", host)
 		return goproxy.RejectConnect, host
 	}
-	log.Printf("Host accepted: %s\n", host)
+	//log.Printf("Host accepted: %s\n", host)
 	return goproxy.OkConnect, host
 }

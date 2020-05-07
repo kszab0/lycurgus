@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -16,16 +17,20 @@ func main() {
 	whitelistPath := flag.String("whitelist", defaultWhitelistPath, "path to whitelist file")
 	autostartEnabled := flag.Bool("autostart", defaultAutostartEnabled, "autostart enabled")
 	guiEnabled := flag.Bool("gui", true, "start app with GUI")
-	logFile := flag.String("log", "", "path to log file")
+	logEnabled := flag.Bool("log", true, "logging enabled")
+	logFile := flag.String("logfile", logFile(), "path to log file")
 	proxyAddress := flag.String("proxy", "", "upstream proxy address")
 	flag.Parse()
 
-	if *logFile != "" {
-		file, err := os.OpenFile(*logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if *logEnabled && *logFile != "" {
+		fmt.Println("logenabled: ", *logFile)
+
+		file, err := createLogFile(*logFile)
 		if err != nil {
-			log.Fatalf("error opening file: %v", err)
+			log.Printf("Error opening file: %v", err)
 		}
 		defer file.Close()
+
 		wrt := io.MultiWriter(os.Stdout, file)
 		log.SetOutput(wrt)
 	}
@@ -49,6 +54,8 @@ func main() {
 	if *guiEnabled {
 		go app.RunGUI()
 	}
+
+	log.Println("Lycurgus started")
 
 	var stopCh = make(chan os.Signal, 2)
 	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
