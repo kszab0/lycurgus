@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,21 +9,11 @@ import (
 )
 
 func main() {
-	blockerAddress := flag.String("address", defaultBlockerAddress, "address to run blocker")
-	blocklistPath := flag.String("blocklist", defaultBlocklistPath, "path to blocklist file")
-	blacklistPath := flag.String("blacklist", defaultBlacklistPath, "path to blacklist file")
-	whitelistPath := flag.String("whitelist", defaultWhitelistPath, "path to whitelist file")
-	autostartEnabled := flag.Bool("autostart", defaultAutostartEnabled, "autostart enabled")
-	guiEnabled := flag.Bool("gui", true, "start app with GUI")
-	logEnabled := flag.Bool("log", true, "logging enabled")
-	logFile := flag.String("logfile", logFile(), "path to log file")
-	proxyAddress := flag.String("proxy", "", "upstream proxy address")
-	flag.Parse()
+	config := parseConfig(os.Args)
+	log.Println(config)
 
-	if *logEnabled && *logFile != "" {
-		fmt.Println("logenabled: ", *logFile)
-
-		file, err := createLogFile(*logFile)
+	if config.LogEnabled && config.LogPath != "" {
+		file, err := createLogFile(config.LogPath)
 		if err != nil {
 			log.Printf("Error opening file: %v", err)
 		}
@@ -36,12 +24,12 @@ func main() {
 	}
 
 	app, err := NewApp(
-		WithBlockerAddress(*blockerAddress),
-		WithBlocklistPath(*blocklistPath),
-		WithBlacklistPath(*blacklistPath),
-		WithWhitelistPath(*whitelistPath),
-		WithAutostartEnabled(*autostartEnabled),
-		WithProxyAddress(*proxyAddress),
+		WithBlockerAddress(config.BlockerAddress),
+		WithBlocklistPath(config.BlocklistPath),
+		WithBlacklistPath(config.BlacklistPath),
+		WithWhitelistPath(config.WhitelistPath),
+		WithAutostartEnabled(config.AutostartEnabled),
+		WithProxyAddress(config.ProxyAddress),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -51,7 +39,7 @@ func main() {
 		log.Fatal(app.RunBlocker())
 	}()
 
-	if *guiEnabled {
+	if config.GUIEnabled {
 		go app.RunGUI()
 	}
 

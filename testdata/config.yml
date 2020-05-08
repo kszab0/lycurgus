@@ -1,0 +1,4 @@
+address: ":5555"
+autostart: false
+gui: true
+log: false

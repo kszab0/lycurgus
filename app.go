@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -16,16 +15,6 @@ const (
 	appTitle   = "Lycurgus"
 	appTooltip = "Lycurgus Ad Blocker"
 )
-
-const (
-	defaultBlockerAddress   = ":8080"
-	defaultBlockerEnabled   = true
-	defaultAutostartEnabled = true
-)
-
-var defaultBlocklistPath = filepath.Join(configDir(), "blocklist")
-var defaultBlacklistPath = filepath.Join(configDir(), "blacklist")
-var defaultWhitelistPath = filepath.Join(configDir(), "whitelist")
 
 const defaultBlocklists = `https://adaway.org/hosts.txt
 https://v.firebog.net/hosts/AdguardDNS.txt
@@ -159,7 +148,7 @@ func NewApp(opts ...AppOption) (*App, error) {
 
 	autostart, err := NewAutostart()
 	if err != nil {
-		log.Println("Error setting autostart: ", err)
+		log.Println("Error initializing autostart: ", err)
 	}
 	app.autostart = autostart
 	if err := app.autostart.setEnabled(app.autostartEnabled); err != nil {

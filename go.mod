@@ -8,4 +8,5 @@ require (
 	github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99
 	github.com/kszab0/go-autostart v0.0.0-20200427071555-bff0c655f7a4
 	gopkg.in/elazarl/goproxy.v1 v1.0.0-20180725130230-947c36da3153
+	gopkg.in/yaml.v2 v2.2.8
 )
