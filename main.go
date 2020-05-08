@@ -23,14 +23,7 @@ func main() {
 		log.SetOutput(wrt)
 	}
 
-	app, err := NewApp(
-		WithBlockerAddress(config.BlockerAddress),
-		WithBlocklistPath(config.BlocklistPath),
-		WithBlacklistPath(config.BlacklistPath),
-		WithWhitelistPath(config.WhitelistPath),
-		WithAutostartEnabled(config.AutostartEnabled),
-		WithProxyAddress(config.ProxyAddress),
-	)
+	app, err := NewApp(*config)
 	if err != nil {
 		log.Fatal(err)
 	}

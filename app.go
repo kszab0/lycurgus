@@ -46,72 +46,17 @@ type App struct {
 	QuitCh chan struct{}
 }
 
-// AppOption is a functional option for configuring App.
-type AppOption func(*App)
-
-// WithBlockerAddress sets the blocker's http address.
-func WithBlockerAddress(addr string) AppOption {
-	return func(app *App) {
-		app.blockerAddress = addr
-	}
-}
-
-// WithEnabled sets the blocker's enabled state.
-func WithEnabled(enabled bool) AppOption {
-	return func(app *App) {
-		app.blockerEnabled = enabled
-	}
-}
-
-// WithBlocklistPath sets the file path for the blocklists.
-func WithBlocklistPath(path string) AppOption {
-	return func(app *App) {
-		app.blocklistPath = path
-	}
-}
-
-// WithBlacklistPath sets the file path for the blacklist.
-func WithBlacklistPath(path string) AppOption {
-	return func(app *App) {
-		app.blacklistPath = path
-	}
-}
-
-// WithWhitelistPath sets the file path for the whitelist.
-func WithWhitelistPath(path string) AppOption {
-	return func(app *App) {
-		app.whitelistPath = path
-	}
-}
-
-// WithAutostartEnabled sets the file path for the blacklist.
-func WithAutostartEnabled(enabled bool) AppOption {
-	return func(app *App) {
-		app.autostartEnabled = enabled
-	}
-}
-
-// WithProxyAddress sets the upstream proxy address.
-func WithProxyAddress(url string) AppOption {
-	return func(app *App) {
-		app.proxyAddress = url
-	}
-}
-
 // NewApp creates and initializes an App.
-func NewApp(opts ...AppOption) (*App, error) {
+func NewApp(config Config) (*App, error) {
 	app := &App{
-		blockerAddress:   defaultBlockerAddress,
+		blockerAddress:   config.BlockerAddress,
 		blockerEnabled:   defaultBlockerEnabled,
-		blocklistPath:    defaultBlocklistPath,
-		blacklistPath:    defaultBlacklistPath,
-		whitelistPath:    defaultWhitelistPath,
-		autostartEnabled: defaultAutostartEnabled,
+		blocklistPath:    config.BlocklistPath,
+		blacklistPath:    config.BlacklistPath,
+		whitelistPath:    config.WhitelistPath,
+		autostartEnabled: config.AutostartEnabled,
 		getter:           http.DefaultClient,
 		QuitCh:           make(chan struct{}, 1),
-	}
-	for _, opt := range opts {
-		opt(app)
 	}
 
 	// set upstream proxy for default http client
