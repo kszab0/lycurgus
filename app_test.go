@@ -21,9 +21,10 @@ func TestGetBlocklists(t *testing.T) {
 	}
 	blocklists := string(b)
 
-	expectedBlocklists := "https://asdf.aa\r\nhttps://qwer.qq"
+	expectedBlocklists := "https://asdf.aa\nhttps://qwer.qq"
+	expectedBlocklistsWin := "https://asdf.aa\r\nhttps://qwer.qq"
 
-	if blocklists != expectedBlocklists {
+	if blocklists != expectedBlocklists && blocklists != expectedBlocklistsWin {
 		t.Errorf("blocklists should be: %v; got: %v", expectedBlocklists, blocklists)
 	}
 }
