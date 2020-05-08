@@ -1,3 +1,6 @@
+[![Build Status](https://api.travis-ci.org/kszab0/lycurgus.svg?branch=master)](https://travis-ci.org/github/kszab0/lycurgus)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kszab0/lycurgus)](https://goreportcard.com/report/github.com/kszab0/lycurgus)
+
 # Lycurgus
 <img src="logo.png" alt="logo" width="128"/>
 
