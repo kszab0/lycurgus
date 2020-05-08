@@ -49,7 +49,7 @@ func TestParseFileContent(t *testing.T) {
 		content: []byte(`address: ":5555"
 autostart: false
 gui: true
-log: fasle`),
+log: false`),
 		expected: &Config{
 			BlockerAddress:   ":5555",
 			AutostartEnabled: false,

@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -22,10 +21,7 @@ func TestGetBlocklists(t *testing.T) {
 	}
 	blocklists := string(b)
 
-	expectedBlocklists := "https://asdf.aa\nhttps://qwer.qq"
-	if runtime.GOOS == "windows" {
-		expectedBlocklists = "https://asdf.aa\r\nhttps://qwer.qq"
-	}
+	expectedBlocklists := "https://asdf.aa\r\nhttps://qwer.qq"
 
 	if blocklists != expectedBlocklists {
 		t.Errorf("blocklists should be: %v; got: %v", expectedBlocklists, blocklists)
