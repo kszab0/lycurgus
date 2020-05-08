@@ -17,14 +17,18 @@ You must have [Go](https://golang.org/) installed in order to build Lycurgus.
 
 ### Windows
 ```
-Build.cmd dependencies
 Build.cmd
 ```
 
 ### Linux and macOS
 ```
-make dependencies
-make all
+make
+```
+
+Building the app requires gtk3, libappindicator3 and libwebkit2gtk-4.0-dev development headers to be installed. You can install them for Debian or Ubuntu using:
+
+```
+sudo apt-get install libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
 ```
 
 ## Usage
