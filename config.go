@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -129,19 +128,12 @@ func defaultConfig(config *fileConfig) {
 
 // parseFile parses a yaml config.
 func parseFile(c *fileConfig, filePath string) {
-	content, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Println("Error reading config: ", err)
-		return
-	}
+	content, _ := ioutil.ReadFile(filePath)
 	parseFileContent(c, content)
 }
 
 func parseFileContent(c *fileConfig, content []byte) {
-	err := yaml.Unmarshal(content, c)
-	if err != nil {
-		log.Println("Error unmarshaling config: ", err)
-	}
+	yaml.Unmarshal(content, c)
 }
 
 func isFlagPassed(flags *flag.FlagSet, name string) bool {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
 
 	"gopkg.in/elazarl/goproxy.v1"
@@ -45,6 +46,7 @@ func NewBlocker(opts ...BlockerOption) *Blocker {
 	}
 
 	b.proxy = goproxy.NewProxyHttpServer()
+	b.proxy.Logger.SetOutput(ioutil.Discard)
 	b.proxy.OnRequest().HandleConnectFunc(b.handleConnect)
 	// set upstream proxy address
 	if b.proxyAddress != "" {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +9,6 @@ import (
 
 func main() {
 	config := parseConfig(os.Args)
-	log.Println(config)
 
 	if config.LogEnabled && config.LogPath != "" {
 		file, err := createLogFile(config.LogPath)
@@ -18,9 +16,7 @@ func main() {
 			log.Printf("Error opening file: %v", err)
 		}
 		defer file.Close()
-
-		wrt := io.MultiWriter(os.Stdout, file)
-		log.SetOutput(wrt)
+                log.SetOutput(file)
 	}
 
 	app, err := NewApp(*config)
