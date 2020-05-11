@@ -245,23 +245,3 @@ func createConfigFile(logFile string) (*os.File, error) {
 	}
 	return os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 }
-
-func logDir() string {
-	dirs := appdir.New(appName)
-	return dirs.UserLogs()
-}
-
-func createLogDir() error {
-	return createDir(logDir())
-}
-
-func logFile() string {
-	return filepath.Join(logDir(), "lycurgus.log")
-}
-
-func createLogFile(logFile string) (*os.File, error) {
-	if err := createLogDir(); err != nil {
-		return nil, err
-	}
-	return os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-}

@@ -10,14 +10,7 @@ import (
 func main() {
 	config := parseConfig(os.Args)
 
-	if config.LogEnabled && config.LogPath != "" {
-		file, err := createLogFile(config.LogPath)
-		if err != nil {
-			log.Printf("Error opening file: %v", err)
-		}
-		defer file.Close()
-                log.SetOutput(file)
-	}
+	initLog(config)
 
 	app, err := NewApp(*config)
 	if err != nil {
