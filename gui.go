@@ -17,19 +17,17 @@ type GUI struct {
 	EnabledCh   chan bool
 	AutostartCh chan bool
 
-	ReloadBlocklistCh chan struct{}
-	ReloadBlacklistCh chan struct{}
-	ReloadWhitelistCh chan struct{}
+	UpdateCh chan struct{}
 
 	QuitCh chan struct{}
 }
 
 type menu struct {
 	enabled         *systray.MenuItem
+	enabledAction   *systray.MenuItem
 	autostart       *systray.MenuItem
-	reloadBlocklist *systray.MenuItem
-	reloadBlacklist *systray.MenuItem
-	reloadWhitelist *systray.MenuItem
+	autostartAction *systray.MenuItem
+	update          *systray.MenuItem
 	quit            *systray.MenuItem
 }
 
@@ -61,12 +59,10 @@ func NewGUI(opts ...GUIOption) (*GUI, error) {
 		icon:    icon,
 		menu:    &menu{},
 
-		EnabledCh:         make(chan bool),
-		AutostartCh:       make(chan bool),
-		ReloadBlocklistCh: make(chan struct{}),
-		ReloadBlacklistCh: make(chan struct{}),
-		ReloadWhitelistCh: make(chan struct{}),
-		QuitCh:            make(chan struct{}),
+		EnabledCh:   make(chan bool),
+		AutostartCh: make(chan bool),
+		UpdateCh:    make(chan struct{}),
+		QuitCh:      make(chan struct{}),
 	}
 
 	for _, opt := range opts {
@@ -87,53 +83,61 @@ func (gui *GUI) Run() {
 }
 
 func (gui *GUI) init() {
-	systray.SetTitle(gui.title)
+	//systray.SetTitle(gui.title)
 	systray.SetTooltip(gui.tooltip)
 	systray.SetIcon(gui.icon)
 
-	gui.menu.enabled = systray.AddMenuItem("Enable", "")
-	if gui.enabled {
-		gui.menu.enabled.Check()
-	}
-	gui.menu.autostart = systray.AddMenuItem("Autostart", "")
-	if gui.autostart {
-		gui.menu.autostart.Check()
-	}
+	gui.menu.enabled = systray.AddMenuItem("Enabled", "")
+	gui.menu.enabled.Disable()
+	gui.menu.enabledAction = systray.AddMenuItem("Disable", "")
+	gui.setEnabled()
 	systray.AddSeparator()
 
-	gui.menu.reloadBlocklist = systray.AddMenuItem("Reload Blocklist", "")
-	gui.menu.reloadBlacklist = systray.AddMenuItem("Reload Blacklist", "")
-	gui.menu.reloadWhitelist = systray.AddMenuItem("Reload Whitelist", "")
+	gui.menu.autostart = systray.AddMenuItem("Autostart enabled", "")
+	gui.menu.autostart.Disable()
+	gui.menu.autostartAction = systray.AddMenuItem("Disable autostart", "")
+	gui.setAutostart()
+	systray.AddSeparator()
+
+	gui.menu.update = systray.AddMenuItem("Update lists", "")
 	systray.AddSeparator()
 
 	gui.menu.quit = systray.AddMenuItem("Quit", "")
 }
 
+func (gui *GUI) setAutostart() {
+	if gui.autostart {
+		gui.menu.autostart.SetTitle("Autostart enabled")
+		gui.menu.autostartAction.SetTitle("Disable autostart")
+	} else {
+		gui.menu.autostart.SetTitle("Autostart disabled")
+		gui.menu.autostartAction.SetTitle("Enable autostart")
+	}
+}
+
+func (gui *GUI) setEnabled() {
+	if gui.enabled {
+		gui.menu.enabled.SetTitle("Lycurgus is Enabled")
+		gui.menu.enabledAction.SetTitle("Disable Lycurgus")
+	} else {
+		gui.menu.enabled.SetTitle("Lycurgus is Disabled")
+		gui.menu.enabledAction.SetTitle("Enable Lycurgus")
+	}
+}
+
 func (gui *GUI) listen() {
 	for {
 		select {
-		case <-gui.menu.enabled.ClickedCh:
+		case <-gui.menu.enabledAction.ClickedCh:
 			gui.enabled = !gui.enabled
 			gui.EnabledCh <- gui.enabled
-			if gui.enabled {
-				gui.menu.enabled.Check()
-			} else {
-				gui.menu.enabled.Uncheck()
-			}
-		case <-gui.menu.autostart.ClickedCh:
+			gui.setEnabled()
+		case <-gui.menu.autostartAction.ClickedCh:
 			gui.autostart = !gui.autostart
 			gui.AutostartCh <- gui.autostart
-			if gui.autostart {
-				gui.menu.autostart.Check()
-			} else {
-				gui.menu.autostart.Uncheck()
-			}
-		case <-gui.menu.reloadBlocklist.ClickedCh:
-			gui.ReloadBlocklistCh <- struct{}{}
-		case <-gui.menu.reloadBlacklist.ClickedCh:
-			gui.ReloadBlacklistCh <- struct{}{}
-		case <-gui.menu.reloadWhitelist.ClickedCh:
-			gui.ReloadWhitelistCh <- struct{}{}
+			gui.setAutostart()
+		case <-gui.menu.update.ClickedCh:
+			gui.UpdateCh <- struct{}{}
 		case <-gui.menu.quit.ClickedCh:
 			gui.QuitCh <- struct{}{}
 			gui.Quit()

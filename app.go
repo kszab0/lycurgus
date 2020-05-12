@@ -218,15 +218,13 @@ func (app *App) RunGUI() {
 					log.Println("Error setting autostart: ", err)
 				}
 				log.Println("Autostart set to: ", enabled)
-			case <-app.gui.ReloadBlocklistCh:
+			case <-app.gui.UpdateCh:
 				if err := app.LoadBlocklist(); err != nil {
 					log.Println("Error reloading blocklist: ", err)
 				}
-			case <-app.gui.ReloadBlacklistCh:
 				if err := app.LoadBlacklist(); err != nil {
 					log.Println("Error reloading blacklist: ", err)
 				}
-			case <-app.gui.ReloadWhitelistCh:
 				if err := app.LoadWhitelist(); err != nil {
 					log.Println("Error reloading whitelist: ", err)
 				}
