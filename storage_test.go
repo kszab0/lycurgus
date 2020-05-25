@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -50,7 +49,7 @@ func TestGetBlocklistsDefault(t *testing.T) {
 
 func TestLoadMatcherFromFile(t *testing.T) {
 	path := filepath.Join("testdata", "blacklist")
-	matcher, err := loadMatcherFromFile(path)
+	matcher, err := getMatcherFromFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,9 +60,9 @@ func TestLoadMatcherFromFile(t *testing.T) {
 
 func TestLoadMathcerFromNotExistingFile(t *testing.T) {
 	path := filepath.Join("testdata", "nothing")
-	matcher, err := loadMatcherFromFile(path)
-	if !os.IsNotExist(err) {
-		t.Fatal("Error should be os.ErrNotExists")
+	matcher, err := getMatcherFromFile(path)
+	if err != nil {
+		t.Fatal("Error should be nil")
 	}
 	if matcher != nil {
 		t.Fatal("Matcher should be nil")
@@ -72,7 +71,7 @@ func TestLoadMathcerFromNotExistingFile(t *testing.T) {
 
 func TestLoadMatcherFromEmptyFile(t *testing.T) {
 	path := filepath.Join("testdata", "empty")
-	matcher, err := loadMatcherFromFile(path)
+	matcher, err := getMatcherFromFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,51 +81,45 @@ func TestLoadMatcherFromEmptyFile(t *testing.T) {
 }
 
 func TestLoadBlacklist(t *testing.T) {
-
-	app := &App{
-		blocker: &Blocker{},
-	}
-	app.blacklistPath = filepath.Join("testdata", "blacklist")
-	if err := app.LoadBlacklist(); err != nil {
+	storage := &Storage{}
+	storage.blacklistPath = filepath.Join("testdata", "blacklist")
+	matcher, err := storage.GetBlacklist()
+	if err != nil {
 		t.Errorf("Error should be nil; got: %v", err)
 	}
-	if app.blocker.blacklist == nil {
+	if matcher == nil {
 		t.Errorf("Blacklist should not be nil")
 	}
 
-	app = &App{
-		blocker: &Blocker{},
-	}
-	app.blacklistPath = filepath.Join("testdata", "nothing")
-	if err := app.LoadBlacklist(); err != nil {
+	storage = &Storage{}
+	storage.blacklistPath = filepath.Join("testdata", "nothing")
+	matcher, err = storage.GetBlacklist()
+	if err != nil {
 		t.Errorf("Error should be nil; got: %v", err)
 	}
-	if app.blocker.blacklist != nil {
+	if matcher != nil {
 		t.Errorf("Blacklist should be nil")
 	}
 }
 
 func TestLoadWhitelist(t *testing.T) {
-
-	app := &App{
-		blocker: &Blocker{},
-	}
-	app.whitelistPath = filepath.Join("testdata", "blacklist")
-	if err := app.LoadWhitelist(); err != nil {
+	storage := &Storage{}
+	storage.whitelistPath = filepath.Join("testdata", "blacklist")
+	matcher, err := storage.GetWhitelist()
+	if err != nil {
 		t.Errorf("Error should be nil; got: %v", err)
 	}
-	if app.blocker.whitelist == nil {
+	if matcher == nil {
 		t.Errorf("Whitelist should not be nil")
 	}
 
-	app = &App{
-		blocker: &Blocker{},
-	}
-	app.whitelistPath = filepath.Join("testdata", "nothing")
-	if err := app.LoadWhitelist(); err != nil {
+	storage = &Storage{}
+	storage.whitelistPath = filepath.Join("testdata", "nothing")
+	matcher, err = storage.GetWhitelist()
+	if err != nil {
 		t.Errorf("Error should be nil; got: %v", err)
 	}
-	if app.blocker.blacklist != nil {
+	if matcher != nil {
 		t.Errorf("Whitelist should be nil")
 	}
 }

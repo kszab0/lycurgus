@@ -1,13 +1,9 @@
 package main
 
 import (
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 )
 
 const (
@@ -32,14 +28,11 @@ https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts`
 type App struct {
 	blockerAddress   string
 	blockerEnabled   bool
-	blocklistPath    string
-	blacklistPath    string
-	whitelistPath    string
 	autostartEnabled bool
 	proxyAddress     string
 
+	storage   *Storage
 	blocker   *Blocker
-	getter    Getter
 	gui       *GUI
 	autostart *Autostart
 
@@ -51,12 +44,14 @@ func NewApp(config Config) (*App, error) {
 	app := &App{
 		blockerAddress:   config.BlockerAddress,
 		blockerEnabled:   defaultBlockerEnabled,
-		blocklistPath:    config.BlocklistPath,
-		blacklistPath:    config.BlacklistPath,
-		whitelistPath:    config.WhitelistPath,
 		autostartEnabled: config.AutostartEnabled,
-		getter:           http.DefaultClient,
-		QuitCh:           make(chan struct{}, 1),
+		storage: &Storage{
+			blocklistPath:  config.BlocklistPath,
+			blacklistPath:  config.BlacklistPath,
+			whitelistPath:  config.WhitelistPath,
+			updateInterval: config.UpdateInterval,
+		},
+		QuitCh: make(chan struct{}, 1),
 	}
 
 	// set upstream proxy for default http client
@@ -67,11 +62,10 @@ func NewApp(config Config) (*App, error) {
 		}
 	}
 
-	blocker := NewBlocker(
+	app.blocker = NewBlocker(
 		WithBlockerEnabled(app.blockerEnabled),
 		WithBlockerProxyAddress(app.proxyAddress),
 	)
-	app.blocker = blocker
 	if err := app.LoadBlocklist(); err != nil {
 		return nil, err
 	}
@@ -106,64 +100,21 @@ func NewApp(config Config) (*App, error) {
 // LoadBlocklist reads the blocklist file
 // and initializes the blocker's blocklist matcher.
 func (app *App) LoadBlocklist() error {
-	file, err := getBlocklists(app.blocklistPath)
+	blocklist, err := app.storage.GetBlocklist()
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	app.blocker.blocklist = app.loadBlocklist(file)
+	app.blocker.blocklist = blocklist
 	return nil
-}
-
-// getBlocklists reads a blocklists file.
-// If the file is not exists it returns the default blocklists.
-func getBlocklists(path string) (io.ReadCloser, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			rc := ioutil.NopCloser(strings.NewReader(defaultBlocklists))
-			return rc, nil
-		}
-		return nil, err
-	}
-	return file, nil
-}
-
-// loadBloclists parses a blocklists file
-// and initializes a hashMatcher as a blocklist.
-func (app *App) loadBlocklist(r io.Reader) Matcher {
-	rules := []string{}
-	urls, err := readLines(r)
-	if err != nil {
-		return nil
-	}
-	for _, url := range urls {
-		hosts, err := parseHostsURL(app.getter, url)
-		if err != nil {
-			log.Println("Error reading blocklist: ", url)
-			continue
-		}
-		rules = append(rules, hosts...)
-	}
-	log.Printf("Blocklists loaded (%v)\n", len(urls))
-	matcher := &hashMatcher{}
-	matcher.Load(rules)
-	return matcher
 }
 
 // LoadBlacklist reads the blacklist file
 // and initializes the blocker's blacklist matcher.
 func (app *App) LoadBlacklist() error {
-	blacklist, err := loadMatcherFromFile(app.blacklistPath)
+	blacklist, err := app.storage.GetBlacklist()
 	if err != nil {
-		// ignore if file not exists
-		if os.IsNotExist(err) {
-			return nil
-		}
 		return err
 	}
-
 	log.Println("Blacklist loaded")
 	app.blocker.blacklist = blacklist
 	return nil
@@ -172,33 +123,13 @@ func (app *App) LoadBlacklist() error {
 // LoadWhitelist reads the whitelist file
 // and initializes the blocker's whitelist matcher.
 func (app *App) LoadWhitelist() error {
-	whitelist, err := loadMatcherFromFile(app.whitelistPath)
+	whitelist, err := app.storage.GetWhitelist()
 	if err != nil {
-		// ignore if file not exists
-		if os.IsNotExist(err) {
-			return nil
-		}
 		return err
 	}
-
 	log.Println("Whitelist loaded")
 	app.blocker.whitelist = whitelist
 	return nil
-}
-
-// loadMatcherFromFile loads and initializes a regexpMatcher from a file.
-func loadMatcherFromFile(path string) (Matcher, error) {
-	hosts, err := parseHostsFile(path)
-	if err != nil {
-		return nil, err
-	}
-	// deal with existing but empty file
-	if len(hosts) <= 0 {
-		return nil, nil
-	}
-	matcher := &regexpMatcher{}
-	matcher.Load(hosts)
-	return matcher, nil
 }
 
 // RunBlocker serves the Blocker.
