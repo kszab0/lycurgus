@@ -1,21 +1,32 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Storage struct {
-	blocklistPath string
-	blacklistPath string
-	whitelistPath string
+	blocklistPath  string
+	blacklistPath  string
+	whitelistPath  string
+	updateInterval time.Duration
 }
 
-func (s *Storage) GetBlocklist() (Matcher, error) {
+func (s *Storage) GetBlocklist(allowCache bool) (Matcher, error) {
+	if allowCache {
+		if matcher, ok := getBlocklistFromCache(s.updateInterval); ok {
+			return matcher, nil
+		}
+	}
+
 	file, err := getBlocklists(s.blocklistPath)
 	if err != nil {
 		return nil, err
@@ -40,6 +51,64 @@ func getBlocklists(path string) (io.ReadCloser, error) {
 	return file, nil
 }
 
+func blocklistCachePath() (path string, lastUpdate time.Time, exist bool) {
+	files, err := ioutil.ReadDir(blocklistCacheDir())
+	if err != nil || len(files) == 0 {
+		return "", time.Time{}, false
+	}
+	path = filepath.Join(blocklistCacheDir(), files[len(files)-1].Name())
+
+	timestamp, err := strconv.ParseInt(filepath.Base(path), 10, 64)
+	if err != nil {
+		return "", time.Time{}, false
+	}
+	lastUpdate = time.Unix(timestamp, 0)
+
+	return path, lastUpdate, true
+}
+
+func getBlocklistFromCache(updateInterval time.Duration) (Matcher, bool) {
+	path, lastUpdate, ok := blocklistCachePath()
+	if !ok {
+		return nil, false
+	}
+	if time.Now().After(lastUpdate.Add(updateInterval)) {
+		return nil, false
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, false
+	}
+	defer file.Close()
+
+	rules, err := readLines(file)
+	if err != nil {
+		return nil, false
+	}
+	matcher := &hashMatcher{}
+	matcher.Load(rules)
+	//log.Printf("Blocklists loaded from cache (%v)\n", len(rules))
+
+	return matcher, true
+}
+
+func cacheBlocklist(rules []string) error {
+	path := filepath.Join(blocklistCacheDir(), fmt.Sprintf("%v", time.Now().Unix()))
+
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	for _, rule := range rules {
+		file.WriteString(fmt.Sprintf("%s\n", rule))
+	}
+	defer file.Close()
+
+	return nil
+}
+
 // getBloclist parses a blocklists file
 // and initializes a hashMatcher as a blocklist.
 func (s *Storage) getBlocklist(r io.Reader) Matcher {
@@ -57,7 +126,9 @@ func (s *Storage) getBlocklist(r io.Reader) Matcher {
 		rules = append(rules, hosts...)
 	}
 
-	log.Printf("Blocklists loaded (%v - %v)\n", len(urls), len(rules))
+	cacheBlocklist(rules)
+
+	//log.Printf("Blocklists loaded (%v - %v)\n", len(urls), len(rules))
 	matcher := &hashMatcher{}
 	matcher.Load(rules)
 	return matcher
@@ -68,7 +139,6 @@ func (s *Storage) GetBlacklist() (Matcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Blacklist loaded")
 	return blacklist, nil
 }
 
@@ -77,7 +147,6 @@ func (s *Storage) GetWhitelist() (Matcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Whitelist loaded")
 	return whitelist, nil
 
 }

@@ -66,7 +66,7 @@ func NewApp(config Config) (*App, error) {
 		WithBlockerEnabled(app.blockerEnabled),
 		WithBlockerProxyAddress(app.proxyAddress),
 	)
-	if err := app.LoadBlocklist(); err != nil {
+	if err := app.LoadBlocklist(true); err != nil {
 		return nil, err
 	}
 	if err := app.LoadBlacklist(); err != nil {
@@ -99,8 +99,8 @@ func NewApp(config Config) (*App, error) {
 
 // LoadBlocklist reads the blocklist file
 // and initializes the blocker's blocklist matcher.
-func (app *App) LoadBlocklist() error {
-	blocklist, err := app.storage.GetBlocklist()
+func (app *App) LoadBlocklist(allowCache bool) error {
+	blocklist, err := app.storage.GetBlocklist(allowCache)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (app *App) RunGUI() {
 				}
 				log.Println("Autostart set to: ", enabled)
 			case <-app.gui.UpdateCh:
-				if err := app.LoadBlocklist(); err != nil {
+				if err := app.LoadBlocklist(false); err != nil {
 					log.Println("Error reloading blocklist: ", err)
 				}
 				if err := app.LoadBlacklist(); err != nil {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ProtonMail/go-appdir"
 	"gopkg.in/yaml.v2"
@@ -22,6 +23,7 @@ var (
 	defaultBlacklistPath    = filepath.Join(configDir(), "blacklist")
 	defaultWhitelistPath    = filepath.Join(configDir(), "whitelist")
 	defaultLogPath          = logFile()
+	defaultUpdateInterval   = 24 * time.Hour
 )
 
 // Config holds the settings for the application
@@ -35,18 +37,20 @@ type Config struct {
 	LogEnabled       bool
 	LogPath          string
 	ProxyAddress     string
+	UpdateInterval   time.Duration
 }
 
 type fileConfig struct {
-	BlockerAddress   *string `yaml:"address,omitempty"`
-	BlocklistPath    *string `yaml:"blocklist,omitempty"`
-	BlacklistPath    *string `yaml:"blacklist,omitempty"`
-	WhitelistPath    *string `yaml:"whitelist,omitempty"`
-	AutostartEnabled *bool   `yaml:"autostart,omitempty"`
-	GUIEnabled       *bool   `yaml:"gui,omitempty"`
-	LogEnabled       *bool   `yaml:"log,omitempty"`
-	LogPath          *string `yaml:"logfile,omitempty"`
-	ProxyAddress     *string `yaml:"proxy,omitempty"`
+	BlockerAddress   *string        `yaml:"address,omitempty"`
+	BlocklistPath    *string        `yaml:"blocklist,omitempty"`
+	BlacklistPath    *string        `yaml:"blacklist,omitempty"`
+	WhitelistPath    *string        `yaml:"whitelist,omitempty"`
+	AutostartEnabled *bool          `yaml:"autostart,omitempty"`
+	GUIEnabled       *bool          `yaml:"gui,omitempty"`
+	LogEnabled       *bool          `yaml:"log,omitempty"`
+	LogPath          *string        `yaml:"logfile,omitempty"`
+	ProxyAddress     *string        `yaml:"proxy,omitempty"`
+	UpdateInterval   *time.Duration `ỳaml:"updateInterval,omitempty"`
 }
 
 func (fc *fileConfig) toConfig() *Config {
@@ -78,6 +82,9 @@ func (fc *fileConfig) toConfig() *Config {
 	if fc.ProxyAddress != nil {
 		c.ProxyAddress = *fc.ProxyAddress
 	}
+	if fc.UpdateInterval != nil {
+		c.UpdateInterval = *fc.UpdateInterval
+	}
 	return c
 }
 
@@ -92,8 +99,9 @@ func (c *Config) String() string {
   LogEnabled:       %v,
   LogPath:          %v,
   ProxyAddress:     %v,
+  UpdateInterval:   %v,
 }`, c.BlockerAddress, c.BlocklistPath, c.BlacklistPath, c.WhitelistPath,
-		c.AutostartEnabled, c.GUIEnabled, c.LogEnabled, c.LogPath, c.ProxyAddress)
+		c.AutostartEnabled, c.GUIEnabled, c.LogEnabled, c.LogPath, c.ProxyAddress, c.UpdateInterval)
 }
 
 func defaultConfig(config *fileConfig) {
@@ -123,6 +131,9 @@ func defaultConfig(config *fileConfig) {
 	}
 	if config.ProxyAddress == nil {
 		config.ProxyAddress = &defaultProxyAddress
+	}
+	if config.UpdateInterval == nil {
+		config.UpdateInterval = &defaultUpdateInterval
 	}
 }
 
@@ -159,6 +170,7 @@ func parseFlags(config *Config, args []string) {
 	logEnabled := flags.Bool("log", true, "logging enabled")
 	logFile := flags.String("logfile", "", "path to log file")
 	proxyAddress := flags.String("proxy", "", "upstream proxy address")
+	updateInterval := flags.Duration("update", 0, "update interval")
 
 	flags.Parse(args[1:])
 
@@ -188,6 +200,9 @@ func parseFlags(config *Config, args []string) {
 	}
 	if isFlagPassed(flags, "proxy") {
 		config.ProxyAddress = *proxyAddress
+	}
+	if isFlagPassed(flags, "update") {
+		config.UpdateInterval = *updateInterval
 	}
 }
 
@@ -244,4 +259,13 @@ func createConfigFile(logFile string) (*os.File, error) {
 		return nil, err
 	}
 	return os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+}
+
+func cacheDir() string {
+	dir, _ := os.UserCacheDir()
+	return filepath.Join(dir, appName)
+}
+
+func blocklistCacheDir() string {
+	return filepath.Join(cacheDir(), "blocklist")
 }
