@@ -1,11 +1,16 @@
+NAME := Lycurgus
+APP := lycurgus
+VERSION := `git rev-parse --short HEAD`
+BUILD_DATE := `date +%FT%T%z`
+
 all:
-	@/bin/echo -n "[Lycurgus] Building Lycurgus... "
-	@go build -ldflags="-s -w" -o lycurgus 
+	@/bin/echo -n "[$(NAME)] Building... "
+	@go build -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildDate=${BUILD_DATE}" -o $(APP) 
 	@/bin/echo "OK"
 
 clean:
-	@/bin/echo -n "[Lycurgus] Cleaning up... "
-	@rm -f ./lycurgus
+	@/bin/echo -n "[$(NAME)] Cleaning up... "
+	@rm -f ./$(APP)
 	@/bin/echo "OK"
 
 .PHONY: clean all

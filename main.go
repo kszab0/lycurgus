@@ -12,6 +12,8 @@ func main() {
 
 	initLog(config)
 
+	log.Printf("Starting Lycurgus version: %s built @ %s\n", Version, BuildDate)
+
 	app, err := NewApp(*config)
 	if err != nil {
 		log.Fatal(err)
