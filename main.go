@@ -24,17 +24,14 @@ func main() {
 	}()
 
 	if config.GUIEnabled {
-		go app.RunGUI()
+		app.RunGUI()
 	}
-
-	log.Println("Lycurgus started")
 
 	var stopCh = make(chan os.Signal, 2)
 	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	select {
 	case <-app.QuitCh:
-		return
 	case <-stopCh:
 		return
 	}
